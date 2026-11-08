@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Catur Guru - Game Edukasi Hindu SD</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            font-family: Arial, sans-serif;
+            user-select: none;
+        }
+
+        /* Responsive 16:9 Aspect Ratio Enforcer */
+        .game-wrapper {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0c4a6e;
+            overflow: hidden;
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 56.25vw; /* 16:9 ratio */
+            max-height: 100vh;
+            max-width: 177.78vh; /* 16:9 ratio */
+            position: relative;
+            background: linear-gradient(rgba(12, 74, 110, 0.45), rgba(3, 105, 161, 0.65)), 
+                        url('https://images.rawpixel.com/image_social_square/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdjEwMTYtYy0wOF8xLWtzaGJmN2ZuLmpwZw.jpg'); /* Fallback pattern if offline */
+            background-image: linear-gradient(rgba(15, 23, 42, 0.4), rgba(12, 74, 110, 0.55)), 
+                              url('https://lh3.googleusercontent.com/d/1_IMAGE_BACKGROUND_BALI_CATUR_GURU'); 
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #screenCover,
+        #screenOpening,
+        #screenMap,
+        #screenGame {
+            background-size: cover;
+            background-position: center;
+        }
+
+        #screenCover {
+            background-image: linear-gradient(rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.45)), url('Asset/Cover.jpeg');
+        }
+
+        #screenOpening {
+            background-image: linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.55)), url('Asset/background1.jpeg');
+        }
+
+        #screenMap {
+            background-image: linear-gradient(rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.45)), url('Asset/background2.jpeg');
+        }
+
+        #screenGame {
+            background-image: linear-gradient(rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.5)), url('Asset/background1.jpeg');
+        }
+
+        #screenResult {
+            background-image: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.6)), url('Asset/background.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Inline SVG background fallback using image concept */
+        .bg-bali-custom {
+            background-image: linear-gradient(rgba(15, 23, 42, 0.35), rgba(12, 74, 110, 0.55)), 
+                              url('https://placehold.co/1920x1080/0284c7/facc15?text=Petualangan+Catur+Guru+Bali');
+        }
+
+        /* Custom Bright Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #facc15;
+            border-radius: 6px;
+        }
+
+        /* Drag and Drop styling */
+        .draggable-item {
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        .drop-zone {
+            transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+        }
+        .drop-zone.drag-over {
+            background-color: rgba(254, 240, 138, 0.5);
+            border-color: #eab308;
+            transform: scale(1.02);
+        }
+
+        /* Playful Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(1deg); }
+        }
+        .animate-float {
+            animation: floatSlow 3.5s ease-in-out infinite;
+        }
+
+        @keyframes bounceGlow {
+            0%, 100% { transform: scale(1); box-shadow: 0 10px 25px -5px rgba(250, 204, 21, 0.6); }
+            50% { transform: scale(1.04); box-shadow: 0 20px 35px -5px rgba(250, 204, 21, 0.9); }
+        }
+        .glow-button {
+            animation: bounceGlow 2s infinite;
+        }
+
+        @keyframes pulseNode {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        .active-map-node {
+            animation: pulseNode 1.5s infinite;
+        }
+
+        /* SVG Bali Landscape Overlay Background */
+        .bali-bg-pattern {
+            background-image: radial-gradient(rgba(255, 255, 255, 0.15) 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="bg-sky-950 text-slate-800 flex items-center justify-center min-h-screen m-0 p-0 overflow-hidden">
+
+    <!-- GAME WRAPPER (Strict 16:9 Screen) -->
+    <div class="game-wrapper">
+        <div id="gameContainer" class="game-container rounded-2xl border-4 border-amber-300 relative shadow-2xl">
+            
+            <!-- BALI HINDU BACKGROUND GRAPHICS -->
+            <!-- Custom Image Background Overlay Container -->
+            <div class="absolute inset-0 z-0 bg-cover bg-center pointer-events-none" 
+                 style="background-image: linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(3, 105, 161, 0.65)), url('https://v3.fal.media/files/monkey/aK2YI6iY71h231kXQxM--.jpeg'), url('https://placehold.co/1920x1080/0284c7/ffffff?text=Pura+Bali+Catur+Guru'); background-blend-mode: overlay;">
+            </div>
+
+            <!-- Sun & Cloud Decor -->
+            <div class="absolute top-2 left-6 opacity-90 pointer-events-none z-0">
+                <i class="fas fa-sun text-yellow-300 text-6xl animate-spin" style="animation-duration: 40s;"></i>
+            </div>
+            <div class="absolute top-4 right-16 opacity-80 pointer-events-none z-0 text-white text-4xl animate-float">
+                <i class="fas fa-cloud"></i>
+            </div>
+            <div class="absolute top-10 left-1/3 opacity-50 pointer-events-none z-0 text-sky-100 text-5xl animate-float" style="animation-delay: 1.5s;">
+                <i class="fas fa-cloud"></i>
+            </div>
+
+            <!-- Balinese Temple & Penjor Silhouette Bottom Decoration -->
+            <div class="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-emerald-600 to-transparent pointer-events-none z-0 flex items-end justify-between px-8">
+                <!-- Penjor Icons left/right -->
+                <div class="text-amber-300 opacity-80 text-5xl pb-2">
+                    <i class="fas fa-torii-gate"></i>
+                </div>
+                <div class="text-emerald-300 opacity-90 text-6xl font-bold flex items-center space-x-6 pb-1">
+                    <i class="fas fa-tree"></i>
+                    <i class="fas fa-gopuram"></i>
+                    <i class="fas fa-tree"></i>
+                </div>
+                <div class="text-amber-300 opacity-80 text-5xl pb-2">
+                    <i class="fas fa-torii-gate"></i>
+                </div>
+            </div>
+
+            <!-- SOUND TOGGLE BUTTON -->
+            <div class="absolute top-3 right-4 z-50 flex items-center space-x-3">
+                <button id="muteBtn" onclick="toggleAudio()" class="bg-amber-400 hover:bg-amber-300 border-2 border-amber-100 text-slate-900 p-2.5 rounded-2xl shadow-lg transition transform hover:scale-110">
+                    <i id="audioIcon" class="fas fa-volume-up text-lg flex items-center justify-center"></i>
+                </button>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- SCREEN 0: COVER SCREEN -->
+            <!-- ========================================== -->
+            <div id="screenCover" class="screen-view active w-full h-full flex flex-col items-center justify-end pb-16 md:pb-24 text-center relative z-10">
+                <div>
+                    <button onclick="goToOpeningScreen()" 
+                        class="px-10 py-5 bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 border-4 border-white text-slate-950 font-black rounded-3xl shadow-2xl transform hover:scale-110 transition duration-200 uppercase tracking-wider text-xl flex items-center space-x-3 glow-button cursor-pointer">
+                        <i class="fas fa-play-circle text-3xl"></i>
+                        <span>Mulai Permainan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- SCREEN 1: OPENING / TITLE & IDENTITY SCREEN -->
+            <!-- ========================================== -->
+            <div id="screenOpening" class="screen-view hidden w-full h-full flex flex-col justify-between p-4 md:p-6 relative z-10 text-center">
+                
+                <!-- TOP: Title Game -->
+                <div class="space-y-1">
+                    <h1 class="text-2xl md:text-4xl font-black text-amber-300 drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] tracking-wide leading-tight">
+                        Mengenal Catur Guru<br>
+                        <span class="text-lg md:text-2xl font-extrabold text-amber-200 block mt-1">(Game Edukasi Agama Hindu)</span>
+                    </h1>
+                    <!-- DIRECTLY BELOW TITLE: Brief Instructions -->
+                    <div class="max-w-3xl mx-auto bg-sky-950/85 backdrop-blur-md border-2 border-amber-400 px-4 py-2 rounded-2xl shadow-lg mt-2">
+                        <p class="text-xs md:text-sm text-sky-100 font-extrabold leading-tight">
+                            “Berpetualang menjelajahi pulau Bali untuk mengenal Catur Guru dengan menjawab tantangan dari setiap level, dan jadilah pemenang!”
+                        </p>
+                    </div>
+                </div>
+
+                <!-- MIDDLE: Form Input Identitas -->
+                <div class="max-w-md w-full mx-auto bg-amber-400/95 backdrop-blur-md border-4 border-white p-5 rounded-3xl shadow-2xl text-slate-900 my-auto">
+                    <h2 class="text-lg font-black text-center text-slate-900 border-b-2 border-amber-500 pb-1.5 mb-3">
+                        Form Identitas Peserta
+                    </h2>
+                    <form id="identityForm" onsubmit="startGame(event)" class="space-y-3">
+                        <div class="text-left">
+                            <label class="block text-xs font-black uppercase mb-1 text-slate-800">Nama Lengkap</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-sky-700 font-bold">
+                                    <i class="fas fa-user-circle text-lg"></i>
+                                </span>
+                                <input type="text" id="playerName" required placeholder="Ketik Nama Kamu..." 
+                                    class="w-full pl-10 pr-4 py-2 bg-white/95 border-2 border-amber-300 rounded-xl text-slate-900 font-bold placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-sky-400 text-sm">
+                            </div>
+                        </div>
+                        <div class="text-left">
+                            <label class="block text-xs font-black uppercase mb-1 text-slate-800">Kelas</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-sky-700 font-bold">
+                                    <i class="fas fa-graduation-cap text-lg"></i>
+                                </span>
+                                <input type="text" id="playerClass" required placeholder="Contoh: Kelas 6 A / 6 B..." 
+                                    class="w-full pl-10 pr-4 py-2 bg-white/95 border-2 border-amber-300 rounded-xl text-slate-900 font-bold placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-sky-400 text-sm">
+                            </div>
+                        </div>
+                        <!-- BUTTON ACTIVE BELOW FORM: "Mulai" -->
+                        <button type="submit" 
+                            class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 border-2 border-white text-white font-black rounded-2xl shadow-xl transform hover:scale-105 transition duration-150 uppercase tracking-wider text-base flex items-center justify-center space-x-2 glow-button cursor-pointer">
+                            <span>Mulai</span>
+                            <i class="fas fa-arrow-right text-lg"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- BOTTOM: Creator & School Info (Strictly Order Specified) -->
+                <div class="space-y-0.5 pt-1">
+                    <p class="text-xs md:text-sm text-yellow-300 font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                        Dibuat Oleh: Ni Luh Desy Dwi Anike Dhamayanti
+                    </p>
+                    <p class="text-xs md:text-sm text-white font-extrabold drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                        SMA Negeri 2 Singaraja
+                    </p>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- SCREEN 2: ADVENTURE MAP (LEVEL SELECTOR) -->
+            <!-- ========================================== -->
+            <div id="screenMap" class="screen-view hidden w-full h-full flex flex-col justify-between p-4 relative z-10">
+                <!-- Top Player Bar -->
+                <div class="bg-sky-900/90 border-3 border-amber-400 rounded-2xl p-3 flex items-center justify-between shadow-xl text-white">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-amber-400 border-2 border-white flex items-center justify-center text-slate-900 font-black text-xl shadow">
+                            <i class="fas fa-user-astronaut"></i>
+                        </div>
+                        <div>
+                            <div id="mapPlayerName" class="font-extrabold text-yellow-300 text-sm">Siswa</div>
+                            <div id="mapPlayerClass" class="text-xs text-sky-200 font-bold">Kelas</div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs text-amber-300 uppercase font-black">PETA PETUALANGAN BALI</div>
+                        <div class="text-xs text-sky-100 font-semibold">Pilih level yang terbuka untuk bermain</div>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-sky-950 border-2 border-amber-400 px-3 py-1.5 rounded-xl">
+                        <i class="fas fa-star text-yellow-400 text-lg"></i>
+                        <span class="text-xs font-bold text-sky-200">Skor:</span>
+                        <span id="mapScore" class="font-black text-yellow-300 text-lg">0</span>
+                    </div>
+                </div>
+
+                <!-- ADVENTURE MAP CANVAS / ROAD DISPLAY -->
+                <div class="my-auto relative w-full max-w-4xl mx-auto h-[320px] bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 rounded-3xl border-4 border-amber-300 shadow-2xl overflow-hidden flex items-center justify-center">
+                    
+                    <!-- Bali Landscape Illustration Layers inside Map -->
+                    <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff_2px,transparent_2px)] [background-size:20px_20px]"></div>
+                    <div class="absolute top-4 left-6 text-emerald-200/40 text-7xl"><i class="fas fa-mountain"></i></div>
+                    <div class="absolute bottom-4 right-10 text-emerald-200/40 text-8xl"><i class="fas fa-tree"></i></div>
+                    <div class="absolute top-8 right-1/4 text-emerald-200/40 text-6xl"><i class="fas fa-synagogue"></i></div>
+
+                    <!-- CONNECTING ADVENTURE ROAD (SVG PATH) -->
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 800 320">
+                        <path d="M 90,240 C 200,100 250,260 370,160 C 450,90 530,240 710,120" 
+                              fill="none" stroke="#fef08a" stroke-width="14" stroke-dasharray="16, 10" stroke-linecap="round"/>
+                        <path d="M 90,240 C 200,100 250,260 370,160 C 450,90 530,240 710,120" 
+                              fill="none" stroke="#b45309" stroke-width="6" stroke-dasharray="16, 10" stroke-linecap="round"/>
+                    </svg>
+
+                    <!-- LEVEL MAP NODES (1 to 5) -->
+                    <div class="relative z-10 w-full h-full">
+                        <!-- Node 1 -->
+                        <div class="absolute left-[8%] bottom-[16%] flex flex-col items-center">
+                            <button id="mapNode-1" onclick="selectLevelFromMap(1)" class="w-16 h-16 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 border-4 border-white text-slate-900 font-black text-2xl shadow-xl hover:scale-110 transition flex items-center justify-center">
+                                1
+                            </button>
+                            <span class="mt-1 px-2 py-0.5 bg-sky-950/90 text-yellow-300 font-extrabold text-[11px] rounded-lg border border-amber-300">Level 1</span>
+                        </div>
+
+                        <!-- Node 2 -->
+                        <div class="absolute left-[26%] top-[20%] flex flex-col items-center">
+                            <button id="mapNode-2" onclick="selectLevelFromMap(2)" class="w-16 h-16 rounded-full bg-slate-700 border-4 border-slate-400 text-white font-black text-xl shadow-xl flex items-center justify-center cursor-not-allowed">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            <span class="mt-1 px-2 py-0.5 bg-sky-950/90 text-sky-200 font-extrabold text-[11px] rounded-lg border border-slate-500">Level 2</span>
+                        </div>
+
+                        <!-- Node 3 -->
+                        <div class="absolute left-[44%] bottom-[35%] flex flex-col items-center">
+                            <button id="mapNode-3" onclick="selectLevelFromMap(3)" class="w-16 h-16 rounded-full bg-slate-700 border-4 border-slate-400 text-white font-black text-xl shadow-xl flex items-center justify-center cursor-not-allowed">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            <span class="mt-1 px-2 py-0.5 bg-sky-950/90 text-sky-200 font-extrabold text-[11px] rounded-lg border border-slate-500">Level 3</span>
+                        </div>
+
+                        <!-- Node 4 -->
+                        <div class="absolute left-[63%] top-[24%] flex flex-col items-center">
+                            <button id="mapNode-4" onclick="selectLevelFromMap(4)" class="w-16 h-16 rounded-full bg-slate-700 border-4 border-slate-400 text-white font-black text-xl shadow-xl flex items-center justify-center cursor-not-allowed">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            <span class="mt-1 px-2 py-0.5 bg-sky-950/90 text-sky-200 font-extrabold text-[11px] rounded-lg border border-slate-500">Level 4</span>
+                        </div>
+
+                        <!-- Node 5 -->
+                        <div class="absolute right-[8%] top-[26%] flex flex-col items-center">
+                            <button id="mapNode-5" onclick="selectLevelFromMap(5)" class="w-16 h-16 rounded-full bg-slate-700 border-4 border-slate-400 text-white font-black text-xl shadow-xl flex items-center justify-center cursor-not-allowed">
+                                <i class="fas fa-lock"></i>
+                            </button>
+                            <span class="mt-1 px-2 py-0.5 bg-sky-950/90 text-sky-200 font-extrabold text-[11px] rounded-lg border border-slate-500">Level 5 (Final)</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Map Action Footer -->
+                <div class="text-center">
+                    <button id="startMapLevelBtn" onclick="playCurrentLevel()" class="px-8 py-3 bg-amber-400 hover:bg-yellow-300 border-3 border-white text-slate-900 font-black rounded-2xl shadow-xl text-sm uppercase tracking-wider glow-button">
+                        <i class="fas fa-play-circle mr-2 text-lg"></i> Mulai Mainkan Level Sekarang!
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- SCREEN 3: GAME PLAY (QUESTIONS CONTAINER) -->
+            <!-- ========================================== -->
+            <div id="screenGame" class="screen-view hidden w-full h-full flex flex-col justify-between p-4 md:p-5 relative z-10">
+                
+                <!-- TOP BAR: Player & Level Status -->
+                <div class="bg-sky-900/90 border-3 border-amber-400 rounded-2xl p-2.5 flex items-center justify-between shadow-lg text-white">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="returnToMap()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 px-3 py-1 rounded-xl font-black text-xs border border-white flex items-center space-x-1 shadow">
+                            <i class="fas fa-map"></i>
+                            <span>Peta</span>
+                        </button>
+                        <div>
+                            <div id="displayPlayerName" class="font-extrabold text-yellow-300 text-xs">Siswa</div>
+                            <div id="displayPlayerClass" class="text-[11px] text-sky-200 font-bold">Kelas</div>
+                        </div>
+                    </div>
+
+                    <div id="levelNavContainer" class="flex items-center space-x-1.5">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+
+                    <div class="flex items-center space-x-1.5 bg-sky-950 border border-amber-400 px-2.5 py-1 rounded-xl">
+                        <i class="fas fa-star text-yellow-400 text-sm"></i>
+                        <span id="displayScore" class="font-black text-yellow-300 text-sm">0</span>
+                    </div>
+                </div>
+
+                <!-- MAIN QUESTION CONTAINER -->
+            <div class="my-auto">
+                <div class="max-w-4xl mx-auto bg-white/95 backdrop-blur-md border-4 border-amber-400 rounded-3xl p-5 md:p-6 shadow-2xl relative text-slate-800">
+                    
+                    <!-- Level Header -->
+                    <div class="flex items-center justify-between border-b-2 border-amber-200 pb-3 mb-3">
+                        <div>
+                            <h2 id="levelTitle" class="text-base md:text-xl font-black text-sky-950 flex items-center">
+                                <i class="fas fa-map-marker-alt text-amber-500 mr-2"></i> Level 1 - Mengenal Catur Guru
+                            </h2>
+                            <p id="levelSubtitle" class="text-xs text-sky-800 font-extrabold">Jawablah tantangan untuk membuka jalan selanjutnya!</p>
+                        </div>
+                        <div class="bg-amber-400 text-slate-900 text-xs px-3 py-1 rounded-full font-black border border-white shadow">
+                            Soal <span id="currentQuestionNum">1</span> / <span id="totalQuestionNum">3</span>
+                        </div>
+                    </div>
+
+                    <!-- DYNAMIC QUESTION CONTENT BOX -->
+                    <div id="questionContainer" class="min-h-[170px] flex flex-col justify-center py-2">
+                        <!-- Content generated dynamically by JavaScript -->
+                    </div>
+
+                    <!-- FEEDBACK & NEXT BUTTON BOX -->
+                    <div id="feedbackBox" class="hidden mt-3 p-3 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-2 transition">
+                        <div id="feedbackText" class="text-xs md:text-sm font-bold flex items-center space-x-2">
+                            <!-- Feedback message text -->
+                        </div>
+                        <button onclick="nextQuestion()" class="px-5 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider shadow border border-white flex items-center space-x-1 shrink-0">
+                            <span>Lanjut</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-slate-200 mt-3">
+                        <button onclick="restartGame()" class="w-full sm:w-auto px-6 py-2.5 bg-amber-400 hover:bg-yellow-300 border-2 border-white text-slate-900 font-black rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-sm">
+                            <i class="fas fa-redo"></i>
+                            <span>Mengulang Permainan</span>
+                        </button>
+                        <button onclick="exitGame()" class="w-full sm:w-auto px-6 py-2.5 bg-rose-500 hover:bg-rose-400 border-2 border-white text-white font-black rounded-xl shadow transition flex items-center justify-center space-x-2 text-sm">
+                            <i class="fas fa-door-open"></i>
+                            <span>Mengakhiri Permainan</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- SCREEN 4: RESULT / CERTIFICATE SCREEN -->
+            <!-- ========================================== -->
+            <div id="screenResult" class="screen-view hidden w-full h-full flex flex-col items-center p-4 md:p-6 text-center relative z-10">
+                <main class="flex flex-1 w-full flex-col items-center justify-center gap-5 md:gap-7">
+                    <div class="space-y-2">
+                        <i class="fas fa-trophy text-4xl md:text-5xl text-amber-300 drop-shadow-lg" aria-hidden="true"></i>
+                        <h1 class="text-2xl md:text-4xl font-black text-white drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] tracking-wide">
+                            Selamat!
+                        </h1>
+                        <p class="text-sm md:text-lg text-white font-extrabold max-w-xl mx-auto drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                            Kamu telah menyelesaikan semua tantangan!
+                        </p>
+                    </div>
+
+                    <div class="max-w-md w-full bg-white/95 backdrop-blur-md border-4 border-amber-400 p-6 md:p-8 rounded-3xl shadow-2xl">
+                        <div class="text-sm md:text-base text-amber-900 font-black uppercase tracking-wide">Total Skor</div>
+                        <div id="finalScore" class="text-6xl md:text-7xl font-black text-amber-600">0</div>
+                    </div>
+                </main>
+
+                <div class="pb-1 w-full max-w-md">
+                    <button onclick="exitGame()" class="w-full py-3 bg-amber-400 hover:bg-yellow-300 border-2 border-white text-slate-950 font-black rounded-2xl shadow-xl transition transform hover:scale-105 uppercase tracking-wide text-xs md:text-sm">
+                        <i class="fas fa-door-open mr-1.5"></i> Mengakhiri Permainan
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- AUDIO SYNTHESIZER (No external audio file dependencies) -->
+    <script>
+        let audioCtx = null;
+        let isMuted = false;
+
+        function goToOpeningScreen() {
+            playSFX('click');
+            switchScreen('screenOpening');
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSFX(type) {
+            if (isMuted) return;
+            try {
+                initAudio();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+                    osc.frequency.setValueAtTime(174.61, audioCtx.currentTime + 0.15); // F3
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.4);
+                } else if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.start(audioCtx.currentTime);
+                    osc.stop(audioCtx.currentTime + 0.08);
+                }
+            } catch (e) {
+                console.log("Audio play blocked");
+            }
+        }
+
+        function toggleAudio() {
+            isMuted = !isMuted;
+            const icon = document.getElementById('audioIcon');
+            if (isMuted) {
+                icon.className = "fas fa-volume-mute text-rose-600 text-lg flex items-center justify-center";
+            } else {
+                icon.className = "fas fa-volume-up text-slate-900 text-lg flex items-center justify-center";
+                playSFX('click');
+            }
+        }
+    </script>
+
+    <!-- GAME LOGIC SCRIPT -->
+    <script>
+        // Player & Game Progress
+        let player = {
+            name: '',
+            class: '',
+            score: 0
+        };
+
+        let currentLevel = 1;
+        let unlockedLevel = 1;
+        let currentQuestionIndex = 0;
+        let dragMatches = {};
+
+        // ALL 5 LEVELS DATA & QUESTIONS
+        const gameLevels = [
+            {
+                level: 1,
+                title: "Level 1 - Mengenal Catur Guru",
+                questions: [
+                    {
+                        type: "mc",
+                        text: "Secara etimologi, kata \"Catur Guru\" berasal dari bahasa Sansekerta. Kata Catur dan Guru masing-masing memiliki arti ...",
+                        options: [
+                            "a. Empat dan Pemimpin",
+                            "b. Lima dan Pengajar",
+                            "c. Empat dan Pengajar/Pembimbing",
+                            "d. Tiga dan Pengasuh"
+                        ],
+                        correct: 2,
+                        explanation: "Istilah \"Guru\" memiliki makna sebagai sosok yang dapat menghilangkan kegelapan pikiran manusia menuju terang ilmu pengetahuan."
+                    },
+                    {
+                        type: "drag",
+                        text: "Jodohkan istilah berikut dengan pengertiannya yang tepat!",
+                        items: [
+                            { id: "A", name: "(A) Catur" },
+                            { id: "B", name: "(B) Guru" },
+                            { id: "C", name: "(C) Ajaran Catur Guru" }
+                        ],
+                        targets: [
+                            { id: 1, text: "1. Pengajar, pembimbing, atau sosok yang digugu dan ditiru" },
+                            { id: 2, text: "2. Tata susila untuk membentuk karakter manusia beradab" },
+                            { id: 3, text: "3. (Angka empat) 4" }
+                        ],
+                        correctMap: { "A": 3, "B": 1, "C": 2 }
+                    }
+                ]
+            },
+            {
+                level: 2,
+                title: "Level 2 - Bagian-Bagian Catur Guru",
+                questions: [
+                    {
+                        type: "mc",
+                        text: "Sosok yang dikategorikan sebagai Guru Rupaka atau Guru Rekha dalam kehidupan sehari-hari adalah ...",
+                        options: [
+                            "a. Bapak dan Ibu Guru di sekolah",
+                            "b. Presiden dan para menteri",
+                            "c. Ayah dan Ibu di rumah",
+                            "d. Ida Sang Hyang Widhi Wasa"
+                        ],
+                        correct: 2
+                    },
+                    {
+                        type: "mc",
+                        text: "Pemerintah, penguasa, dan aparat penegak hukum yang bertugas menjaga ketertiban masyarakat disebut …",
+                        options: [
+                            "a. Guru Swadhyaya",
+                            "b. Guru Wisesa",
+                            "c. Guru Pengajian",
+                            "d. Guru Rupaka"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        type: "tf",
+                        text: "Ida Sang Hyang Widhi Wasa (Tuhan Yang Maha Esa) merupakan wujud dari Guru Swadhyaya karena menjadi sumber dari segala kehidupan dan hukum alam.",
+                        correct: true
+                    },
+                    {
+                        type: "drag",
+                        text: "Pasangkanlah bagian Catur Guru dengan perannya yang sesuai!",
+                        items: [
+                            { id: "A", name: "(A) Guru Pengajian" },
+                            { id: "B", name: "(B) Guru Rupaka" },
+                            { id: "C", name: "(C) Guru Wisesa" }
+                        ],
+                        targets: [
+                            { id: 1, text: "1. Melahirkan, merawat, dan membesarkan anak" },
+                            { id: 2, text: "2. Mengajar ilmu pengetahuan (Vidya) dan moral di sekolah" },
+                            { id: 3, text: "3. Menjaga hukum, keamanan, dan ketertiban negara" }
+                        ],
+                        correctMap: { "A": 2, "B": 1, "C": 3 }
+                    }
+                ]
+            },
+            {
+                level: 3,
+                title: "Level 3 - Upaya Menghormati Catur Guru",
+                questions: [
+                    {
+                        type: "mc",
+                        text: "Salah satu bentuk penerapan ajaran Tri Kaya Parisudha dalam menghormati Guru Swadhyaya (Tuhan) melalui perbuatan (Kayika) adalah ...",
+                        options: [
+                            "a. Mengucapkan salam Om Swastyastu saat bertemu teman",
+                            "b. Melaksanakan sembahyang Tri Sandhya dan Dainika Yajna secara teratur",
+                            "c. Mendoakan keselamatan orang tua setiap hari",
+                            "d. Membayar pajak tepat waktu"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        type: "mc",
+                        text: "Menyapa guru dengan ramah, mengucapkan terima kasih setelah menerima pelajaran, dan tidak memotong pembicaraan guru merupakan wujud hormat kepada Guru Pengajian dalam bentuk ...",
+                        options: [
+                            "a. Manacika (Pikiran)",
+                            "b. Wacika (Perkataan)",
+                            "c. Kayika (Perbuatan)",
+                            "d. Sradha (Keyakinan)"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        type: "mc",
+                        text: "Sikap bijak menggunakan media sosial tanpa menyebarkan berita bohong (hoaks) dan mematuhi peraturan lalu lintas merupakan wujud penghormatan kepada ...",
+                        options: [
+                            "a. Guru Rupaka",
+                            "b. Guru Pengajian",
+                            "c. Guru Wisesa",
+                            "d. Guru Swadhyaya"
+                        ],
+                        correct: 2
+                    },
+                    {
+                        type: "tf",
+                        text: "Membantu pekerjaan rumah seperti menyapu halaman dan merawat orang tua saat sakit adalah contoh pengamalan ajaran bakti kepada Guru Rupaka.",
+                        correct: true
+                    },
+                    {
+                        type: "drag",
+                        text: "Jodohkan tindakan berikut dengan wujud penghormatan Catur Guru yang sesuai!",
+                        items: [
+                            { id: "A", name: "(A) Membaca doa (Mantram) sebelum belajar dan makan" },
+                            { id: "B", name: "(B) Datang ke sekolah tepat waktu dan mengerjakan tugas" },
+                            { id: "C", name: "(C) Merawat dan menjaga fasilitas umum milik negara" }
+                        ],
+                        targets: [
+                            { id: 1, text: "1. Hormat kepada Guru Pengajian" },
+                            { id: 2, text: "2. Hormat kepada Guru Swadhyaya" },
+                            { id: 3, text: "3. Hormat kepada Guru Wisesa" }
+                        ],
+                        correctMap: { "A": 2, "B": 1, "C": 3 }
+                    }
+                ]
+            },
+            {
+                level: 4,
+                title: "Level 4 - Cerita Tentang Catur Guru",
+                questions: [
+                    {
+                        type: "mc",
+                        text: "Tokoh murid dalam kitab Adiparwa yang terkenal sangat taat dan patuh kepada gurunya meskipun mendapat ujian berat adalah ...",
+                        options: [
+                            "a. Sang Arjuna",
+                            "b. Sang Utamanyu",
+                            "c. Sang Karna",
+                            "d. Sang Bima"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        type: "mc",
+                        text: "Tokoh guru atau maharsi yang memberikan ujian kepada muridnya dalam kisah Guru Bhakti di kitab Adiparwa bernama ...",
+                        options: [
+                            "a. Maharsi Bisma",
+                            "b. Maharsi Dronacharya",
+                            "c. Maharsi Dhaumya",
+                            "d. Maharsi Vashistha"
+                        ],
+                        correct: 2
+                    },
+                    {
+                        type: "mc",
+                        text: "Penyebab mata Sang Utamanyu mengalami kebutaan saat menggembalakan lembu di hutan adalah ...",
+                        options: [
+                            "a. Terkena sabetan ranting pohon tua",
+                            "b. Meminum sisa getah beracun dari pohon Biduri (Manaka) karena menahan lapar",
+                            "c. Terjatuh ke dalam sumur tua saat malam hari",
+                            "d. Terkena debu tanah kering di dalam hutan"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        type: "tf",
+                        text: "Sang Utamanyu mengalami kebutaan dan jatuh ke dalam sumur karena dipukul oleh gurunya yang marah.",
+                        correct: false,
+                        explanation: "(Utamanyu buta karena getah pohon Biduri dan jatuh sendiri ke sumur, bukan dipukul guru)"
+                    },
+                    {
+                        type: "mc",
+                        text: "Nilai utama yang dapat kita teladani dari kisah keteladanan Sang Utamanyu adalah ...",
+                        options: [
+                            "a. Kepasrahan tanpa mau berusaha",
+                            "b. Keberanian menentang perintah guru demi kebaikan diri sendiri",
+                            "c. Ketulusan, ketaatan, dan rasa bakti yang teguh kepada guru (Guru Bhakti)",
+                            "d. Keinginan untuk membalas dendam setelah sembuh dari sakit"
+                        ],
+                        correct: 2
+                    }
+                ]
+            },
+            {
+                level: 5,
+                title: "Level 5 - Tes Kemampuan Diri",
+                questions: [
+                    {
+                        type: "mc",
+                        text: "Catur Guru merupakan ajaran penting dalam agama Hindu yang masuk ke dalam kerangka ...",
+                        options: [
+                            "a. Tattwa (Filsafat)",
+                            "b. Tata Susila (Etika)",
+                            "c. Acara (Ritual)",
+                            "d. Yadnya (Kurban Suci)"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        type: "mc",
+                        text: "Bagian Catur Guru yang pertama kali memberikan kasih sayang dan pendidikan dasar karakter di lingkungan rumah tangga adalah ...",
+                        options: [
+                            "a. Guru Rupaka",
+                            "b. Guru Pengajian",
+                            "c. Guru Wisesa",
+                            "d. Guru Swadhyaya"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        type: "mc",
+                        text: "Urutan empat bagian Catur Guru yang benar adalah ...",
+                        options: [
+                            "a. Guru Rupaka, Guru Pengajian, Guru Wisesa, Guru Swadhyaya",
+                            "b. Guru Wisesa, Guru Rupaka, Guru Swadhyaya, Guru Pengajian",
+                            "c. Guru Swadhyaya, Guru Wisesa, Guru Pengajian, Guru Rupaka",
+                            "d. Guru Pengajian, Guru Wisesa, Guru Rupaka, Guru Swadhyaya"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        type: "mc",
+                        text: "Seorang siswa yang selalu mendengarkan penjelasan guru di kelas dengan tertib telah mengamalkan rasa hormat kepada ...",
+                        options: [
+                            "a. Guru Wisesa",
+                            "b. Guru Pengajian",
+                            "c. Guru Rupaka",
+                            "d. Guru Swadhyaya"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        type: "mc",
+                        text: "Menaati aturan undang-undang dan menjaga kebersihan lingkungan fasilitas umum merupakan kewajiban warga negara dalam menghormati ...",
+                        options: [
+                            "a. Guru Wisesa",
+                            "b. Guru Swadhyaya",
+                            "c. Guru Pengajian",
+                            "d. Guru Rupaka"
+                        ],
+                        correct: 0
+                    },
+                    {
+                        type: "tf",
+                        text: "Menurut ajaran Hindu, tidak menuruti perintah orang tua yang baik (Guru Rupaka) termasuk perbuatan yang melanggar nilai Guru Bhakti.",
+                        correct: true
+                    },
+                    {
+                        type: "tf",
+                        text: "Mendoakan keselamatan seluruh makhluk ciptaan Tuhan adalah bentuk penghormatan kepada Guru Swadhyaya melalui pikiran (Manacika).",
+                        correct: true
+                    },
+                    {
+                        type: "drag",
+                        text: "Jodohkan istilah ajaran Hindu berikut dengan pasangan penjelasannya!",
+                        items: [
+                            { id: "A", name: "(A) Guru Bhakti" },
+                            { id: "B", name: "(B) Tri Kaya Parisudha" },
+                            { id: "C", name: "(C) Vidya" }
+                        ],
+                        targets: [
+                            { id: 1, text: "1. Tiga penyucian (Pikiran, Perkataan, Perbuatan)" },
+                            { id: 2, text: "2. Wujud rasa hormat dan kesetiaan kepada guru" },
+                            { id: 3, text: "3. Ilmu pengetahuan yang diajarkan oleh guru" }
+                        ],
+                        correctMap: { "A": 2, "B": 1, "C": 3 }
+                    },
+                    {
+                        type: "mc",
+                        text: "Berkat ketulusan baktinya kepada Maharsi Dhaumya, Sang Utamanyu akhirnya mendapatkan anugerah berupa ...",
+                        options: [
+                            "a. Harta karun dari dalam sumur",
+                            "b. Kesembuhan matanya dan kesempurnaan ilmu pengetahuan",
+                            "c. Kerajaan yang sangat megah",
+                            "d. Senjata sakti untuk berperang"
+                        ],
+                        correct: 1
+                    },
+                    {
+                        type: "mc",
+                        text: "Tujuan utama kita mempelajari dan menerapkan ajaran Catur Guru dalam kehidupan sehari-hari adalah ...",
+                        options: [
+                            "a. Agar dipuji oleh orang lain dan mendapat hadiah",
+                            "b. Menjadi manusia yang berbudi pekerti luhur, berbakti, serta memperoleh keselamatan hidup",
+                            "c. Menghindari hukuman dari aparat pemerintah saja",
+                            "d. Menunjukkan bahwa kita lebih pintar dari teman-teman yang lain"
+                        ],
+                        correct: 1
+                    }
+                ]
+            }
+        ];
+
+        // START GAME FUNCTION
+        function startGame(event) {
+            event.preventDefault();
+            playSFX('click');
+            
+            player.name = document.getElementById('playerName').value.trim();
+            player.class = document.getElementById('playerClass').value.trim();
+            player.score = 0;
+
+            document.getElementById('displayPlayerName').innerText = player.name;
+            document.getElementById('displayPlayerClass').innerText = player.class;
+            document.getElementById('displayScore').innerText = player.score;
+
+            document.getElementById('mapPlayerName').innerText = player.name;
+            document.getElementById('mapPlayerClass').innerText = player.class;
+            document.getElementById('mapScore').innerText = player.score;
+
+            // Switch to Map Screen
+            showAdventureMap();
+        }
+
+        // SHOW ADVENTURE MAP
+        function showAdventureMap() {
+            switchScreen('screenMap');
+            renderMapNodes();
+        }
+
+        // RENDER LEVEL MAP NODES
+        function renderMapNodes() {
+            for (let i = 1; i <= 5; i++) {
+                const nodeBtn = document.getElementById(`mapNode-${i}`);
+                if (!nodeBtn) continue;
+
+                if (i <= unlockedLevel) {
+                    nodeBtn.className = "w-16 h-16 rounded-full bg-gradient-to-b from-yellow-300 to-amber-400 border-4 border-white text-slate-900 font-black text-2xl shadow-xl hover:scale-115 transition flex items-center justify-center cursor-pointer";
+                    nodeBtn.innerHTML = i;
+                    nodeBtn.disabled = false;
+                    
+                    if (i === currentLevel) {
+                        nodeBtn.classList.add('active-map-node', 'ring-4', 'ring-yellow-200');
+                    } else {
+                        nodeBtn.classList.remove('active-map-node', 'ring-4', 'ring-yellow-200');
+                    }
+                } else {
+                    nodeBtn.className = "w-16 h-16 rounded-full bg-slate-700/90 border-4 border-slate-400 text-white font-black text-xl shadow-xl flex items-center justify-center cursor-not-allowed opacity-80";
+                    nodeBtn.innerHTML = `<i class="fas fa-lock text-base"></i>`;
+                    nodeBtn.disabled = true;
+                }
+            }
+        }
+
+        function selectLevelFromMap(lvlNum) {
+            if (lvlNum <= unlockedLevel) {
+                playSFX('click');
+                currentLevel = lvlNum;
+                renderMapNodes();
+            }
+        }
+
+        function playCurrentLevel() {
+            playSFX('click');
+            switchScreen('screenGame');
+            renderLevelNav();
+            loadLevel(currentLevel);
+        }
+
+        function returnToMap() {
+            playSFX('click');
+            showAdventureMap();
+        }
+
+        // SCREEN SWITCHER
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen-view').forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // TOP NAV BUTTONS (LEVEL 1-5)
+        function renderLevelNav() {
+            const container = document.getElementById('levelNavContainer');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= 5; i++) {
+                const btn = document.createElement('button');
+                btn.id = `lvlBtn-${i}`;
+                
+                let isUnlocked = i <= unlockedLevel;
+                let isActive = i === currentLevel;
+
+                let btnStyle = "w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center transition border-2 ";
+                
+                if (isActive) {
+                    btnStyle += "bg-amber-400 text-slate-900 border-white ring-2 ring-yellow-300 scale-105 shadow";
+                } else if (isUnlocked) {
+                    btnStyle += "bg-sky-800 text-yellow-300 border-sky-600 hover:bg-sky-700";
+                } else {
+                    btnStyle += "bg-sky-950 text-slate-500 border-sky-900 cursor-not-allowed opacity-60";
+                }
+
+                btn.className = btnStyle;
+                
+                if (isUnlocked) {
+                    btn.innerHTML = i;
+                    btn.onclick = () => {
+                        playSFX('click');
+                        loadLevel(i);
+                    };
+                } else {
+                    btn.innerHTML = `<i class="fas fa-lock text-[10px]"></i>`;
+                    btn.disabled = true;
+                }
+
+                container.appendChild(btn);
+            }
+        }
+
+        // LOAD LEVEL DATA
+        function loadLevel(lvlNum) {
+            currentLevel = lvlNum;
+            currentQuestionIndex = 0;
+            renderLevelNav();
+
+            const levelData = gameLevels.find(l => l.level === lvlNum);
+            document.getElementById('levelTitle').innerHTML = `<i class="fas fa-map-marker-alt text-amber-500 mr-2"></i> ${levelData.title}`;
+            document.getElementById('totalQuestionNum').innerText = levelData.questions.length;
+
+            loadQuestion();
+        }
+
+        // LOAD QUESTION
+        function loadQuestion() {
+            const levelData = gameLevels.find(l => l.level === currentLevel);
+            const qData = levelData.questions[currentQuestionIndex];
+            
+            document.getElementById('currentQuestionNum').innerText = currentQuestionIndex + 1;
+            
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.classList.add('hidden');
+
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = '';
+
+            // Question Text Title
+            const qTitle = document.createElement('h3');
+            qTitle.className = "text-sm md:text-base font-extrabold text-slate-800 leading-relaxed mb-3";
+            qTitle.innerText = qData.text;
+            container.appendChild(qTitle);
+
+            // Explanation note if exists
+            if (qData.explanation && qData.type === 'mc') {
+                const note = document.createElement('p');
+                note.className = "text-xs font-bold text-sky-800 mb-2 bg-sky-100 p-2.5 rounded-xl border border-sky-300";
+                note.innerText = qData.explanation;
+                container.appendChild(note);
+            }
+
+            // Render by Type
+            if (qData.type === 'mc') {
+                renderMultipleChoice(container, qData);
+            } else if (qData.type === 'tf') {
+                renderTrueFalse(container, qData);
+            } else if (qData.type === 'drag') {
+                renderDragAndDrop(container, qData);
+            }
+        }
+
+        // TYPE 1: MULTIPLE CHOICE RENDERER
+        function renderMultipleChoice(container, qData) {
+            const optionsGrid = document.createElement('div');
+            optionsGrid.className = "grid grid-cols-1 sm:grid-cols-2 gap-2.5";
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "p-3 rounded-2xl bg-sky-50 hover:bg-amber-100 border-2 border-sky-200 hover:border-amber-400 text-left text-xs md:text-sm font-bold text-slate-800 transition flex items-center shadow-sm";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswerMC(idx, qData.correct);
+                optionsGrid.appendChild(btn);
+            });
+
+            container.appendChild(optionsGrid);
+        }
+
+        // TYPE 2: TRUE / FALSE RENDERER
+        function renderTrueFalse(container, qData) {
+            const flexBox = document.createElement('div');
+            flexBox.className = "flex gap-4 justify-center py-2";
+
+            const btnTrue = document.createElement('button');
+            btnTrue.className = "w-1/2 max-w-xs py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 border-3 border-white text-white font-black text-sm transition shadow-lg flex items-center justify-center space-x-2";
+            btnTrue.innerHTML = `<i class="fas fa-check-circle text-xl"></i> <span>BENAR</span>`;
+            btnTrue.onclick = () => checkAnswerTF(true, qData.correct, qData.explanation);
+
+            const btnFalse = document.createElement('button');
+            btnFalse.className = "w-1/2 max-w-xs py-3 rounded-2xl bg-rose-500 hover:bg-rose-400 border-3 border-white text-white font-black text-sm transition shadow-lg flex items-center justify-center space-x-2";
+            btnFalse.innerHTML = `<i class="fas fa-times-circle text-xl"></i> <span>SALAH</span>`;
+            btnFalse.onclick = () => checkAnswerTF(false, qData.correct, qData.explanation);
+
+            flexBox.appendChild(btnTrue);
+            flexBox.appendChild(btnFalse);
+            container.appendChild(flexBox);
+        }
+
+        // TYPE 3: DRAG AND DROP RENDERER
+        function renderDragAndDrop(container, qData) {
+            dragMatches = {};
+
+            const mainLayout = document.createElement('div');
+            mainLayout.className = "space-y-3";
+
+            const instructions = document.createElement('p');
+            instructions.className = "text-xs text-sky-800 font-extrabold italic";
+            instructions.innerText = "* Klik atau seret pilihan di kiri ke dalam kotak jawaban yang pas di kanan.";
+            mainLayout.appendChild(instructions);
+
+            const matchGrid = document.createElement('div');
+            matchGrid.className = "grid grid-cols-1 md:grid-cols-2 gap-3";
+
+            // Left Items
+            const leftCol = document.createElement('div');
+            leftCol.className = "space-y-2";
+            qData.items.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.id = `drag-item-${item.id}`;
+                itemEl.className = "draggable-item p-2.5 bg-sky-800 border-2 border-amber-300 rounded-xl text-xs text-white font-black shadow flex items-center justify-between";
+                itemEl.innerText = item.name;
+                itemEl.setAttribute('draggable', 'true');
+                
+                itemEl.onclick = () => selectDragSource(item.id);
+
+                itemEl.ondragstart = (e) => {
+                    e.dataTransfer.setData("text/plain", item.id);
+                };
+
+                leftCol.appendChild(itemEl);
+            });
+
+            // Right Targets
+            const rightCol = document.createElement('div');
+            rightCol.className = "space-y-2";
+            qData.targets.forEach(target => {
+                const targetEl = document.createElement('div');
+                targetEl.className = "drop-zone p-2.5 bg-amber-50 border-2 border-dashed border-amber-400 rounded-xl text-xs text-slate-800 min-h-[44px] flex items-center justify-between font-bold transition";
+                targetEl.id = `target-zone-${target.id}`;
+
+                const label = document.createElement('span');
+                label.innerText = target.text;
+                targetEl.appendChild(label);
+
+                const slot = document.createElement('span');
+                slot.id = `slot-val-${target.id}`;
+                slot.className = "font-black text-amber-900 bg-amber-300 px-2 py-0.5 rounded-lg border border-amber-400 ml-2";
+                slot.innerText = "( ... )";
+                targetEl.appendChild(slot);
+
+                targetEl.ondragover = (e) => {
+                    e.preventDefault();
+                    targetEl.classList.add('drag-over');
+                };
+                targetEl.ondragleave = () => {
+                    targetEl.classList.remove('drag-over');
+                };
+                targetEl.ondrop = (e) => {
+                    e.preventDefault();
+                    targetEl.classList.remove('drag-over');
+                    const itemId = e.dataTransfer.getData("text/plain");
+                    assignMatch(itemId, target.id);
+                };
+
+                targetEl.onclick = () => {
+                    if (selectedDragSource) {
+                        assignMatch(selectedDragSource, target.id);
+                        deselectDragSource();
+                    }
+                };
+
+                rightCol.appendChild(targetEl);
+            });
+
+            matchGrid.appendChild(leftCol);
+            matchGrid.appendChild(rightCol);
+            mainLayout.appendChild(matchGrid);
+
+            const submitBtn = document.createElement('button');
+            submitBtn.className = "w-full py-2.5 bg-amber-400 hover:bg-yellow-300 border-2 border-white text-slate-900 font-black rounded-xl text-xs uppercase tracking-wider transition shadow-md";
+            submitBtn.innerText = "Periksa Pasangan Jawaban";
+            submitBtn.onclick = () => checkAnswerDrag(qData.correctMap);
+
+            mainLayout.appendChild(submitBtn);
+            container.appendChild(mainLayout);
+        }
+
+        let selectedDragSource = null;
+
+        function selectDragSource(itemId) {
+            document.querySelectorAll('.draggable-item').forEach(el => {
+                el.classList.remove('ring-4', 'ring-yellow-300', 'bg-amber-500');
+            });
+
+            if (selectedDragSource === itemId) {
+                selectedDragSource = null;
+            } else {
+                selectedDragSource = itemId;
+                const activeEl = document.getElementById(`drag-item-${itemId}`);
+                if (activeEl) {
+                    activeEl.classList.add('ring-4', 'ring-yellow-300', 'bg-amber-500');
+                }
+            }
+        }
+
+        function deselectDragSource() {
+            selectedDragSource = null;
+            document.querySelectorAll('.draggable-item').forEach(el => {
+                el.classList.remove('ring-4', 'ring-yellow-300', 'bg-amber-500');
+            });
+        }
+
+        function assignMatch(itemId, targetId) {
+            if (!itemId) return;
+            dragMatches[itemId] = targetId;
+
+            const slot = document.getElementById(`slot-val-${targetId}`);
+            if (slot) {
+                slot.innerText = `(${itemId})`;
+            }
+
+            const itemEl = document.getElementById(`drag-item-${itemId}`);
+            if (itemEl) {
+                itemEl.classList.add('opacity-50');
+            }
+        }
+
+        // VERIFICATION LOGIC
+        function checkAnswerMC(selectedIdx, correctIdx) {
+            disableAllInputs();
+            const isCorrect = (selectedIdx === correctIdx);
+            showFeedback(isCorrect);
+        }
+
+        function checkAnswerTF(selectedVal, correctVal, explanation = "") {
+            disableAllInputs();
+            const isCorrect = (selectedVal === correctVal);
+            showFeedback(isCorrect, explanation);
+        }
+
+        function checkAnswerDrag(correctMap) {
+            const keys = Object.keys(correctMap);
+            let isCorrect = true;
+
+            for (let k of keys) {
+                if (parseInt(dragMatches[k]) !== parseInt(correctMap[k])) {
+                    isCorrect = false;
+                    break;
+                }
+            }
+
+            disableAllInputs();
+            showFeedback(isCorrect);
+        }
+
+        function disableAllInputs() {
+            const container = document.getElementById('questionContainer');
+            const buttons = container.querySelectorAll('button');
+            buttons.forEach(b => b.disabled = true);
+        }
+
+        function showFeedback(isCorrect, extraNote = "") {
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackText = document.getElementById('feedbackText');
+            
+            feedbackBox.classList.remove('hidden', 'bg-emerald-100', 'bg-rose-100', 'border-emerald-500', 'border-rose-500', 'text-emerald-900', 'text-rose-900');
+
+            if (isCorrect) {
+                playSFX('correct');
+                player.score += 10;
+                document.getElementById('displayScore').innerText = player.score;
+                document.getElementById('mapScore').innerText = player.score;
+
+                feedbackBox.classList.add('bg-emerald-100', 'border-2', 'border-emerald-500', 'text-emerald-950');
+                feedbackText.innerHTML = `
+                    <i class="fas fa-check-circle text-emerald-600 text-xl"></i>
+                    <span><strong>Hore, Jawabanmu Benar!</strong> Pintar sekali! ${extraNote}</span>
+                `;
+            } else {
+                playSFX('wrong');
+                feedbackBox.classList.add('bg-rose-100', 'border-2', 'border-rose-500', 'text-rose-950');
+                feedbackText.innerHTML = `
+                    <i class="fas fa-times-circle text-rose-600 text-xl"></i>
+                    <span><strong>Jawaban Kurang Tepat!</strong> Tidak apa-apa, yuk pelajari lagi! ${extraNote}</span>
+                `;
+            }
+        }
+
+        // NEXT QUESTION OR LEVEL UP
+        function nextQuestion() {
+            playSFX('click');
+            const levelData = gameLevels.find(l => l.level === currentLevel);
+
+            if (currentQuestionIndex < levelData.questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                // Finished Level
+                if (currentLevel < 5) {
+                    unlockedLevel = Math.max(unlockedLevel, currentLevel + 1);
+                    currentLevel = currentLevel + 1;
+                    showAdventureMap();
+                } else {
+                    finishGame();
+                }
+            }
+        }
+
+        // FINISH GAME
+        function finishGame() {
+            document.getElementById('finalScore').innerText = player.score;
+            switchScreen('screenResult');
+        }
+
+        // RESTART GAME
+        function restartGame() {
+            playSFX('click');
+            player.score = 0;
+            currentLevel = 1;
+            unlockedLevel = 1;
+            currentQuestionIndex = 0;
+            switchScreen('screenCover');
+        }
+
+        // EXIT GAME
+        function exitGame() {
+            playSFX('click');
+            switchScreen('screenCover');
+        }
+    </script>
+</body>
+</html>
